@@ -1,0 +1,8 @@
+{
+  "name": "Jalaram Account",
+  "description": "A professional business utility for managing tax deadlines, payment tracking, and party-wise ledger entries with voice-controlled task management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
