@@ -37,6 +37,7 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MoreScreen(onOpenDrawer: () -> Unit = {}) {
+    val storagePermissionState = com.example.notification.rememberStoragePermissionState()
     val context = LocalContext.current
     val activity = context as? FragmentActivity
     val appContainer = (context.applicationContext as ReminderApplication).container
@@ -678,15 +679,20 @@ fun MoreScreen(onOpenDrawer: () -> Unit = {}) {
                         onClick = {
                             coroutineScope.launch {
                                 isLoadingBackup = true
-                                val shareIntent = backupManager.shareBackupFile()
-                                isLoadingBackup = false
-                                if (shareIntent != null) {
-                                    lastBackupTime = backupManager.getLastBackupTime()
-                                    val chooser = Intent.createChooser(shareIntent, "Share Backup File")
-                                    chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                                    context.startActivity(chooser)
-                                } else {
-                                    snackbarHostState.showSnackbar("Could not create backup share file.")
+                                try {
+                                    val shareIntent = backupManager.shareBackupFile()
+                                    isLoadingBackup = false
+                                    if (shareIntent != null) {
+                                        lastBackupTime = backupManager.getLastBackupTime()
+                                        val chooser = Intent.createChooser(shareIntent, "Share Backup File")
+                                        chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        context.startActivity(chooser)
+                                    } else {
+                                        snackbarHostState.showSnackbar("Could not create backup share file.")
+                                    }
+                                } catch (e: Exception) {
+                                    isLoadingBackup = false
+                                    snackbarHostState.showSnackbar("Cannot open share options.")
                                 }
                             }
                         },
@@ -701,8 +707,17 @@ fun MoreScreen(onOpenDrawer: () -> Unit = {}) {
                     // Backup Action 2: Save to device file
                     OutlinedButton(
                         onClick = {
+                            if (!storagePermissionState.hasPermission) {
+                                storagePermissionState.requestPermission()
+                                return@OutlinedButton
+                            }
                             val timestamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
-                            saveBackupLauncher.launch("Reminder_Backup_$timestamp.json")
+                            val fileName = "Reminder_Backup_$timestamp.json"
+                            try {
+                                saveBackupLauncher.launch(fileName)
+                            } catch (e: Exception) {
+                                coroutineScope.launch { snackbarHostState.showSnackbar("Cannot open file picker.") }
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
@@ -715,7 +730,15 @@ fun MoreScreen(onOpenDrawer: () -> Unit = {}) {
                     // Restore Action: Pick File to Restore
                     FilledTonalButton(
                         onClick = {
-                            openBackupLauncher.launch(arrayOf("application/json", "*/*"))
+                            if (!storagePermissionState.hasPermission) {
+                                storagePermissionState.requestPermission()
+                                return@FilledTonalButton
+                            }
+                            try {
+                                openBackupLauncher.launch(arrayOf("application/json", "*/*"))
+                            } catch (e: Exception) {
+                                coroutineScope.launch { snackbarHostState.showSnackbar("Cannot open file picker.") }
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
@@ -732,8 +755,17 @@ fun MoreScreen(onOpenDrawer: () -> Unit = {}) {
 
                     OutlinedButton(
                         onClick = {
+                            if (!storagePermissionState.hasPermission) {
+                                storagePermissionState.requestPermission()
+                                return@OutlinedButton
+                            }
                             val timestamp = SimpleDateFormat("yyyyMMdd_HHmm", Locale.getDefault()).format(Date())
-                            saveEncryptedBackupLauncher.launch("Reminder_Encrypted_$timestamp.enc")
+                            val fileName = "Reminder_Encrypted_$timestamp.enc"
+                            try {
+                                saveEncryptedBackupLauncher.launch(fileName)
+                            } catch (e: Exception) {
+                                coroutineScope.launch { snackbarHostState.showSnackbar("Cannot open file picker.") }
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
@@ -745,7 +777,15 @@ fun MoreScreen(onOpenDrawer: () -> Unit = {}) {
 
                     FilledTonalButton(
                         onClick = {
-                            openEncryptedBackupLauncher.launch(arrayOf("application/octet-stream", "*/*"))
+                            if (!storagePermissionState.hasPermission) {
+                                storagePermissionState.requestPermission()
+                                return@FilledTonalButton
+                            }
+                            try {
+                                openEncryptedBackupLauncher.launch(arrayOf("application/octet-stream", "*/*"))
+                            } catch (e: Exception) {
+                                coroutineScope.launch { snackbarHostState.showSnackbar("Cannot open file picker.") }
+                            }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(10.dp)
@@ -1200,3 +1240,5 @@ fun MoreScreen(onOpenDrawer: () -> Unit = {}) {
         )
     }
 }
+
+
