@@ -1,4 +1,7 @@
-package com.example.data.backup
+import re
+
+with open('app/src/main/java/com/example/data/backup/DatabaseBackupHelper.kt', 'w') as f:
+    f.write('''package com.example.data.backup
 
 import android.content.Context
 import android.net.Uri
@@ -132,3 +135,4 @@ object DatabaseBackupHelper {
         }
     }
 }
+''')

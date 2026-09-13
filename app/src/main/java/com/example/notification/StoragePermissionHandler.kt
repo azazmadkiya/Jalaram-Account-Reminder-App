@@ -27,10 +27,6 @@ fun rememberStoragePermissionState(): StoragePermissionState {
     val context = LocalContext.current
     
     val permissionsToRequest = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        // For Android 13+, generic storage permissions are not used for normal files.
-        // But if forced to request, we can request READ_MEDIA_IMAGES etc or just skip.
-        // The prompt says "ensure proper permissions (READ_EXTERNAL_STORAGE/WRITE_EXTERNAL_STORAGE) are requested for Android 13+ if applicable"
-        // Actually, READ_EXTERNAL_STORAGE is still somewhat valid for other apps' files, but let's request it if needed.
         emptyArray<String>() 
     } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
         arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
